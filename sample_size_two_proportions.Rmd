@@ -1,0 +1,122 @@
+---
+title: "Calculating sample sizes for differences in proportions between two independent groups."
+output: html_notebook
+---
+
+
+Get the required packages.
+```{r}
+pacman::p_load(TrialSize, ggplot2)
+```
+
+
+
+
+First, set the parameter ranges that you want.
+
+```{r}
+alpha_lo <- 0.05            #alpha refers to the type 1 significance level
+alpha_hi <- 0.05
+alpha_incr <- 0
+
+beta_lo <- 0.10             #beta refers to the type 2 significance level
+beta_hi <- 0.10             #power = 1- beta
+beta_incr <- 0
+
+p1_lo <- 0.05               #p1 refers to the experimental drug/arm rate
+p1_hi <- 0.95
+p1_incr <- 0.05
+
+p2_lo <- 0.05               #p2 refers to the reference drug/arm rate
+p2_hi <- 0.95
+p2_incr <- 0.05
+
+k_lo <- 1                   #k refers to the ratio n1/n2
+k_hi <- 1
+k_incr <- 0
+
+```
+
+
+Perform sample size calculations.
+
+```{r}
+#_______________calculations
+
+
+alpha <- c()
+beta <- c()
+p1 <- c()
+p2 <- c()
+k <- c()
+delta <- c()
+
+#ssni <- c()
+sseq <- c()
+
+line <- 0
+
+for (a in seq(from = alpha_lo, to = alpha_hi, by = alpha_incr)){
+    for (b in seq(from = beta_lo, to = beta_hi, by = beta_incr)){
+        for (c in seq(from = p1_lo, to = p1_hi, by = p1_incr)){
+            for (d in seq(from = p2_lo, to = p2_hi, by = p2_incr)){
+                for (e in seq(from = k_lo, to = k_hi, by = k_incr)){
+                   
+                            
+                            line <- line + 1
+                            alpha[line] <- a
+                            beta[line] <- b
+                            p1[line] <- c
+                            p2[line] <- d
+                            k[line] <- e
+                            delta[line] <- c-d
+                           
+                            sseq[line] <- 2* ceiling(TwoSampleProportion.Equality(alpha[line],
+                                                                          beta[line],
+                                                                          p1[line],
+                                                                          p2[line],
+                                                                          k[line],
+                                                                          delta[line]))
+                           
+                }
+            }
+        }
+    }
+}
+
+
+```
+
+Make a data.frame with all the summary information, and print the file.
+
+```{r}
+SSSeq <- data.frame(cbind(alpha, beta, p1, p2, k, delta, sseq))
+ 
+```
+
+
+
+
+Make a plot and print it to a pdf file.
+
+
+```{r}
+#make plots
+
+pdf(file = "Compare_two_proportions.pdf", width = 10, height = 10)    #open graphics device
+
+plot1 <- ggplot(data = SSSeq, aes(p1, p2)) +
+    geom_text(aes(label = as.character(sseq))) +
+    scale_x_continuous(breaks = scales::pretty_breaks(n = 20)) +
+    scale_y_continuous(breaks = scales::pretty_breaks(n = 20))
+plot1
+
+dev.off()           #close graphics device
+```
+
+#Display the plot.
+
+```{r}
+plot1
+```
+
